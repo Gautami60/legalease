@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route"; // adjust path if needed
 import dbConnect from "@/lib/dbConnect";
 import Case from "@/model/Case";
@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
 
     let cases;
     if (caseId) {
-      cases = await Case.findOne({ _id: caseId, user: session.user.id });
+      cases = await Case.findOne({ _id: caseId, userId: session.user.id });
     } else {
-      cases = await Case.find({ user: session.user.id });
+      cases = await Case.find({ userId: session.user.id });
     }
 
     return NextResponse.json(cases, { status: 200 });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     await dbConnect();
 
     const body = await req.json();
-    const newCase = new Case({ ...body, user: session.user.id });
+    const newCase = new Case({ ...body, userId: session.user.id });
     await newCase.save();
 
     return NextResponse.json(newCase, { status: 201 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route"; // adjust path if needed
 import dbConnect from "@/lib/dbConnect";
 import Case from "@/model/Case";
@@ -18,7 +18,7 @@ export async function GET(
 
     const singleCase = await Case.findOne({
       _id: params.id,
-      user: session.user.id,
+      userId: session.user.id,
     });
 
     if (!singleCase) {
@@ -47,7 +47,7 @@ export async function PUT(
     const body = await req.json();
 
     const updatedCase = await Case.findOneAndUpdate(
-      { _id: params.id, user: session.user.id },
+      { _id: params.id, userId: session.user.id },
       body,
       { new: true }
     );
@@ -77,7 +77,7 @@ export async function DELETE(
 
     const deletedCase = await Case.findOneAndDelete({
       _id: params.id,
-      user: session.user.id,
+      userId: session.user.id,
     });
 
     if (!deletedCase) {
