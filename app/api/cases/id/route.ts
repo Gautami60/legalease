@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route"; // adjust path if needed
 import dbConnect from "@/lib/dbConnect";
-import Case from "@/models/Case";
+import Case from "@/model/Case";
 
 export async function GET(
   req: NextRequest,

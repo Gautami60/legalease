@@ -8,22 +8,35 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",             // ✅ changed from "bundler" → avoids module alias issues
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "typeRoots": ["./node_modules/@types", "./src/types","./types"],
-    "types": ["node"],
+
+    // ✅ ensure your custom types (like next-auth.d.ts) are loaded
+    "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
+    "types": ["next-auth", "node"],
+
+    // ✅ alias fix
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-auth.d.ts"   // ✅ makes sure TypeScript sees your extended Session type
+  ],
   "exclude": ["node_modules"]
 }
+
