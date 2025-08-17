@@ -1,39 +1,51 @@
-import { NextResponse } from 'next/server';
-import Case from '@/model/Case';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route'; // adjust path if needed
-import dbConnect from '@/lib/dbConnect'; // make sure you have this helper
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route"; // adjust path if needed
+import dbConnect from "@/lib/dbConnect";
+import Case from "@/models/Case";
 
-export async function GET(req: Request) {
-  await dbConnect();
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await dbConnect();
+
+    const { searchParams } = new URL(req.url || "", "http://localhost:3000");
+    const caseId = searchParams.get("id");
+
+    let cases;
+    if (caseId) {
+      cases = await Case.findOne({ _id: caseId, user: session.user.id });
+    } else {
+      cases = await Case.find({ user: session.user.id });
+    }
+
+    return NextResponse.json(cases, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching cases:", error);
+    return NextResponse.json({ error: "Failed to fetch cases" }, { status: 500 });
   }
+}
 
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '20', 10);
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const query: any = { userId: session.user.id };
+    await dbConnect();
 
-  const [data, total] = await Promise.all([
-    Case.find(query)
-      .select('_id title caseNumber status priority court filingDate lastUpdatedAt')
-      .sort({ lastUpdatedAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    Case.countDocuments(query),
-  ]);
+    const body = await req.json();
+    const newCase = new Case({ ...body, user: session.user.id });
+    await newCase.save();
 
-  return NextResponse.json({
-    data,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
+    return NextResponse.json(newCase, { status: 201 });
+  } catch (error) {
+    console.error("Error creating case:", error);
+    return NextResponse.json({ error: "Failed to create case" }, { status: 500 });
+  }
 }
